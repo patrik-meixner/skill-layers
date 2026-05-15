@@ -12,7 +12,9 @@ Each baseline skill in this plugin documents one fixed overlay slot:
 .claude/skills/<baseline>-overlay/SKILL.md
 ```
 
-When the baseline runs, it checks for that file in the consumer repo. If present, it reads the body and applies its rules as **additional, equally-binding** constraints. Conflicts (overlay tries to override a baseline rule) are surfaced in the output, not silently accepted.
+When the baseline is invoked, Claude Code **preloads** the overlay file into the baseline's prompt using a dynamic-context-injection command — before the model runs. If the file is missing, the sentinel `NO_OVERLAY` is loaded instead. The baseline then applies any loaded overlay rules as **additional, equally-binding** constraints. Conflicts (overlay tries to override a baseline rule) are surfaced in the output, not silently accepted.
+
+Preloading (rather than asking the model to "Read the overlay first") means the overlay arrives in context deterministically. There is no ordering for the model to get wrong.
 
 The overlay is also a normal Claude Code skill, so it is **independently invocable**:
 
