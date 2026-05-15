@@ -1,0 +1,23 @@
+{
+  "name": "skill-layers",
+  "owner": {
+    "name": "patrik-meixner"
+  },
+  "metadata": {
+    "description": "Layerable baseline skills for Claude Code — general guidance that consumer repos can extend with project-specific overlays.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "skill-layers",
+      "source": "./plugins/skill-layers",
+      "description": "Baseline skills that auto-load a project-local overlay if one exists. Each baseline (e.g. code-review) is fully usable as shipped; when a consumer repo provides .claude/skills/<baseline>-overlay/SKILL.md, the baseline reads it and treats its rules as additional, equally-binding constraints. Overlays are also invocable standalone for quick project-conventions checks.",
+      "version": "0.1.0",
+      "author": { "name": "patrik-meixner" },
+      "keywords": ["skills", "layering", "overlay", "code-review", "conventions"],
+      "license": "MIT",
+      "category": "skills",
+      "tags": ["skills", "layering", "overlay", "extensible"]
+    }
+  ]
+}
