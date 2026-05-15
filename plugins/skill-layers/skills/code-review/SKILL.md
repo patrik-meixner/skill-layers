@@ -8,7 +8,11 @@ Review the pending changes against the rules below. Project conventions can exte
 
 ## 1. Load the project overlay (if present)
 
-Before reviewing, check whether `.claude/skills/code-review-overlay/SKILL.md` exists in the working repository. If it does, read it and treat the rules in its body as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
+Before reviewing, check whether `.claude/skills/code-review-overlay/SKILL.md` exists in the working repository.
+
+**If it does not exist:** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
+
+**If it does exist:** read it and treat the rules in its body as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
 
 The overlay may:
 
