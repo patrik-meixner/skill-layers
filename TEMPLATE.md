@@ -16,13 +16,15 @@ A baseline skill is layerable when it:
 Paste this section at (or near) the top of any baseline SKILL.md you want to make layerable. Replace `<name>` with the baseline's directory name.
 
 ```markdown
-## Load the project overlay (if present)
+## 0. FIRST ACTION — Load the project overlay
 
-Before producing output, check whether `.claude/skills/<name>-overlay/SKILL.md` exists in the working repository.
+**This is your first action. Do not run any other tool first.** Before issuing any other command, listing any directory, reading any other file, or announcing what you are about to do:
 
-**If it does not exist:** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
+1. Call the `Read` tool on `.claude/skills/<name>-overlay/SKILL.md`.
+2. **If the Read succeeds:** keep the file's body in mind and treat its rules as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
+3. **If the Read fails (file does not exist):** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
 
-**If it does exist:** read it and treat the rules in its body as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
+Only after this Read completes may you begin doing the actual work the skill describes.
 
 The overlay may:
 

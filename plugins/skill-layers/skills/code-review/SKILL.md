@@ -4,15 +4,17 @@ description: Baseline code review for the current changes. Runs context-detected
 
 # Code Review (baseline)
 
-Review the pending changes against the rules below. Project conventions can extend this baseline via an **overlay** (see the final section); do not skip the overlay step if it is present.
+Review the pending changes against the rules below. Project conventions can extend this baseline via an **overlay** (see step 0); do not skip the overlay step if it is present.
 
-## 1. Load the project overlay (if present)
+## 0. FIRST ACTION — Load the project overlay
 
-Before reviewing, check whether `.claude/skills/code-review-overlay/SKILL.md` exists in the working repository.
+**This is your first action. Do not run any other tool first.** Before issuing `git status`, before listing directories, before reading any other file, before announcing what you are about to do:
 
-**If it does not exist:** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
+1. Call the `Read` tool on `.claude/skills/code-review-overlay/SKILL.md`.
+2. **If the Read succeeds:** keep the file's body in mind and treat its rules as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
+3. **If the Read fails (file does not exist):** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
 
-**If it does exist:** read it and treat the rules in its body as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
+Only after this Read completes may you begin gathering review context (`git status`, `git diff`, exploring the repo, etc.).
 
 The overlay may:
 
@@ -22,7 +24,7 @@ The overlay may:
 
 The overlay may NOT remove, soften, or override any rule in this baseline. If the overlay appears to contradict a baseline rule, the baseline rule wins and the conflict must be surfaced in the output under a "Conflicts with overlay" section.
 
-## 2. Discover what already exists
+## 1. Discover what already exists
 
 Do not re-implement in this review what a project-specific tool or skill already owns. Before running checks:
 
@@ -32,7 +34,7 @@ Do not re-implement in this review what a project-specific tool or skill already
 
 Prefer running the project's own commands over re-deriving rules.
 
-## 3. Static analysis (context-detected)
+## 2. Static analysis (context-detected)
 
 Run only tooling the project already configures. In priority order:
 
@@ -42,7 +44,7 @@ Run only tooling the project already configures. In priority order:
 
 If no static-analysis tooling is configured, record this as a finding ("project has no configured static analysis") and continue with the human-verified checks below. Do **not** install or introduce new tooling as part of the review.
 
-## 4. Security checklist (stack-agnostic)
+## 3. Security checklist (stack-agnostic)
 
 - **Input handling:** validation at boundaries, no dynamic eval, parameterised queries, path normalisation, safe subprocess invocation, robust parsers.
 - **Output handling:** context-aware escaping, sanitised errors and logs.
@@ -51,7 +53,7 @@ If no static-analysis tooling is configured, record this as a finding ("project 
 - **Crypto & tokens:** platform libraries only, constant-time comparisons, sensible expiry.
 - **Business logic:** race conditions, overflow/underflow, pagination correctness, idempotency where required.
 
-## 5. Code-level checks (linters often miss these)
+## 4. Code-level checks (linters often miss these)
 
 - Cyclomatic complexity ≤ 10 branches per function.
 - Nesting depth ≤ 3.
@@ -61,7 +63,7 @@ If no static-analysis tooling is configured, record this as a finding ("project 
 - No obvious N+1 queries.
 - No unbounded memory growth (lists/maps that only grow).
 
-## 6. Clean-code audit
+## 5. Clean-code audit
 
 - Names reveal intent: a stranger understands each identifier without the surrounding context.
 - Single responsibility per function; if you cannot name it without "and", split it.
@@ -70,7 +72,7 @@ If no static-analysis tooling is configured, record this as a finding ("project 
 - No TODOs, debug prints, debuggers, or commented-out code left behind.
 - Convention alignment: the diff matches the style of files around it.
 
-## 7. Output
+## 6. Output
 
 Produce a single review report with these sections:
 
@@ -80,7 +82,7 @@ Produce a single review report with these sections:
 4. **Overlay findings** (only if an overlay was loaded) — findings produced by the project-specific rules, labelled so the reader can tell them apart.
 5. **Conflicts with overlay** (only if the overlay contradicted a baseline rule) — describe the conflict and note that the baseline rule was applied.
 
-## 8. Self-check before finalising
+## 7. Self-check before finalising
 
 Before returning the report, confirm:
 
