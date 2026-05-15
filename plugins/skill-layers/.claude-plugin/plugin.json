@@ -1,0 +1,10 @@
+{
+  "name": "skill-layers",
+  "version": "0.1.0",
+  "description": "Baseline skills with a standardised overlay mechanism: each baseline auto-loads .claude/skills/<baseline>-overlay/SKILL.md from the consumer repo as additional, equally-binding rules. Overlays are also invocable standalone.",
+  "author": {
+    "name": "patrik-meixner"
+  },
+  "keywords": ["skills", "layering", "overlay", "code-review", "conventions"],
+  "license": "MIT"
+}
