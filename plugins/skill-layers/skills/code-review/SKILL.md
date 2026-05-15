@@ -1,28 +1,24 @@
 ---
-description: Baseline code review for the current changes. Runs context-detected static analysis, a stack-agnostic security checklist, and a clean-code audit. Automatically merges project-specific rules from .claude/skills/code-review-overlay/SKILL.md when present. Use when the user asks for a code review, wants to vet uncommitted changes, or is preparing to open a PR.
+description: Baseline code review for the current changes. Runs context-detected static analysis, a stack-agnostic security checklist, and a clean-code audit. The project overlay at .claude/skills/code-review-overlay/SKILL.md is preloaded automatically. Use when the user asks for a code review, wants to vet uncommitted changes, or is preparing to open a PR.
+allowed-tools: Bash(cat *) Bash(git rev-parse *)
 ---
 
 # Code Review (baseline)
 
-Review the pending changes against the rules below. Project conventions can extend this baseline via an **overlay** (see step 0); do not skip the overlay step if it is present.
+Review the pending changes against the rules below. Project conventions can extend this baseline via an **overlay**, which has already been preloaded for you in the next section — there is no separate step to load it.
 
-## 0. FIRST ACTION — Load the project overlay
+## Project overlay (preloaded)
 
-**This is your first action. Do not run any other tool first.** Before issuing `git status`, before listing directories, before reading any other file, before announcing what you are about to do:
+The block between `--- BEGIN OVERLAY ---` and `--- END OVERLAY ---` was preloaded from `.claude/skills/code-review-overlay/SKILL.md` in the working repository.
 
-1. Call the `Read` tool on `.claude/skills/code-review-overlay/SKILL.md`.
-2. **If the Read succeeds:** keep the file's body in mind and treat its rules as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
-3. **If the Read fails (file does not exist):** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
+- If the block reads exactly `NO_OVERLAY`, no overlay is configured. Proceed with the baseline rules below only. Do **not** warn, do **not** suggest creating one, and do **not** include any overlay-related sections in the output.
+- Otherwise, treat every rule in the block as an **additional, equally-binding constraint** alongside the baseline rules below. Ignore any YAML frontmatter that appears inside the block.
 
-Only after this Read completes may you begin gathering review context (`git status`, `git diff`, exploring the repo, etc.).
+The overlay may add new rules, narrow scope, or specify project conventions, naming, and stack-specific guidance. The overlay may **not** remove, soften, or override any rule in this baseline. If the overlay appears to contradict a baseline rule, the baseline rule wins and the conflict must be surfaced in the output under a "Conflicts with overlay" section.
 
-The overlay may:
-
-- add new rules,
-- narrow scope (e.g. "in this repo, also check X"),
-- specify project conventions, naming, or stack-specific guidance.
-
-The overlay may NOT remove, soften, or override any rule in this baseline. If the overlay appears to contradict a baseline rule, the baseline rule wins and the conflict must be surfaced in the output under a "Conflicts with overlay" section.
+--- BEGIN OVERLAY ---
+!`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/code-review-overlay/SKILL.md" 2>/dev/null || echo "NO_OVERLAY"`
+--- END OVERLAY ---
 
 ## 1. Discover what already exists
 

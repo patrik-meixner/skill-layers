@@ -1,6 +1,6 @@
 # Adding overlay support to a baseline skill
 
-Any skill in this plugin can be made **layerable** by following the conventions below. The mechanism is intentionally tiny: one section in the baseline, one fixed slot path, no hooks or agents.
+Any skill in this plugin can be made **layerable** by following the conventions below. The mechanism is intentionally tiny and uses Claude Code's built-in dynamic context injection so the overlay is preloaded by the harness before the model sees the skill — there is no soft "first action" rule to be skipped.
 
 ## The contract
 
@@ -8,34 +8,46 @@ A baseline skill is layerable when it:
 
 1. Lives in this plugin at `plugins/skill-layers/skills/<name>/SKILL.md` and is fully usable on its own as shipped.
 2. Documents a fixed overlay slot at `.claude/skills/<name>-overlay/SKILL.md` in the consumer repo.
-3. Reads that overlay file (if present) before producing output, and treats its body as additional, equally-binding rules.
-4. Never lets the overlay remove, soften, or override a baseline rule. Conflicts are surfaced, not silently accepted.
+3. **Preloads** that overlay file (if present) into its own prompt using a `` !`<command>` `` injection — not a runtime Read tool call. Absence yields the sentinel `NO_OVERLAY`.
+4. Treats the loaded overlay rules as additional, equally-binding rules. Never lets the overlay remove, soften, or override a baseline rule. Conflicts are surfaced, not silently accepted.
 
 ## Copy-paste boilerplate
 
-Paste this section at (or near) the top of any baseline SKILL.md you want to make layerable. Replace `<name>` with the baseline's directory name.
+Paste this into any baseline SKILL.md you want to make layerable. Replace `<name>` (twice) with the baseline's directory name.
 
-```markdown
-## 0. FIRST ACTION — Load the project overlay
+### Frontmatter
 
-**This is your first action. Do not run any other tool first.** Before issuing any other command, listing any directory, reading any other file, or announcing what you are about to do:
+Make sure the baseline declares the allowed tools for the injection so it runs without prompting:
 
-1. Call the `Read` tool on `.claude/skills/<name>-overlay/SKILL.md`.
-2. **If the Read succeeds:** keep the file's body in mind and treat its rules as additional, equally-binding constraints alongside everything below. Ignore the file's YAML frontmatter when applying its rules.
-3. **If the Read fails (file does not exist):** proceed with the baseline rules below only. Do not warn, do not suggest creating one, do not include any overlay-related sections in the output. The baseline is fully usable on its own.
-
-Only after this Read completes may you begin doing the actual work the skill describes.
-
-The overlay may:
-
-- add new rules,
-- narrow scope,
-- specify project conventions, naming, or stack-specific guidance.
-
-The overlay may NOT remove, soften, or override any rule in this baseline. If the overlay appears to contradict a baseline rule, the baseline rule wins and the conflict must be surfaced in the output.
+```yaml
+---
+description: ...
+allowed-tools: Bash(cat *) Bash(git rev-parse *)
+---
 ```
 
-And add this as a final section, so the model verifies it actually applied the overlay:
+### Overlay block
+
+Place this section near the **top** of the body, before the baseline rules:
+
+````markdown
+## Project overlay (preloaded)
+
+The block between `--- BEGIN OVERLAY ---` and `--- END OVERLAY ---` was preloaded from `.claude/skills/<name>-overlay/SKILL.md` in the working repository.
+
+- If the block reads exactly `NO_OVERLAY`, no overlay is configured. Proceed with the baseline rules below only. Do **not** warn, do **not** suggest creating one, and do **not** include any overlay-related sections in the output.
+- Otherwise, treat every rule in the block as an **additional, equally-binding constraint** alongside the baseline rules below. Ignore any YAML frontmatter that appears inside the block.
+
+The overlay may add new rules, narrow scope, or specify project conventions. The overlay may **not** remove, soften, or override any rule in this baseline. If the overlay appears to contradict a baseline rule, the baseline rule wins and the conflict must be surfaced in the output under a "Conflicts with overlay" section.
+
+--- BEGIN OVERLAY ---
+!`cat "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/skills/<name>-overlay/SKILL.md" 2>/dev/null || echo "NO_OVERLAY"`
+--- END OVERLAY ---
+````
+
+### Self-check footer
+
+Place this as the final section of the body, so the model verifies it applied the overlay:
 
 ```markdown
 ## Self-check before finalising
@@ -43,18 +55,21 @@ And add this as a final section, so the model verifies it actually applied the o
 Before returning, confirm:
 
 - Every baseline rule was applied.
-- If an overlay was present, every overlay rule was applied too.
+- If an overlay was loaded (i.e. the block above was not `NO_OVERLAY`), every overlay rule was applied too.
 - If the overlay caused you to skip any baseline rule, that omission is surfaced as a conflict — not silently accepted.
 ```
+
+## Why preloading instead of "first action"
+
+`` !`<command>` `` runs **before** the model sees the skill. The harness performs the read; the model has the overlay (or `NO_OVERLAY`) already inlined in its prompt. There is no ordering decision to get wrong and no tool call for the model to forget. The `git rev-parse` prefix is so the injection finds the overlay even when Claude Code was started from a subdirectory.
 
 ## Naming rules
 
 - **Baseline skill name:** plain noun or verb-phrase (`code-review`, `commit-message`, `research`). No suffix.
 - **Overlay slot:** `<baseline>-overlay`. Always `-overlay`, never `-local`, `-project`, or `-base`.
 - **Invocation:**
-  - Baseline runs as `/skill-layers:<baseline>` (plugin-namespaced).
-  - Overlay runs as `/<baseline>-overlay` (consumer project skill).
-  - Both are independently invocable. The overlay is also auto-loaded as data when the baseline runs.
+  - Baseline runs as `/skill-layers:<baseline>` (plugin-namespaced) — overlay preloaded automatically.
+  - Overlay runs as `/<baseline>-overlay` (consumer project skill) — standalone, project rules only.
 
 ## Writing a good overlay
 
